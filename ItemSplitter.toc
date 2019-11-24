@@ -1,0 +1,8 @@
+## Interface: 11302
+## Title: ItemSplitter
+## Title-enUS: ItemSplitter
+## Title-ruRU: Великий разделитель
+## Author: Nick Mitin
+## Version: 0.1
+
+ItemSplitter.lua
