@@ -1,10 +1,23 @@
 local frame, events = CreateFrame("Frame"), {};
 local splitBagID = 0
 local splitSessionStarted = false
+local singleSplitStarted = false
+local singleSplitStarted2 = false
+local g_numberOfStacks = 0
+local g_itemsPerStack = 0
 
 function events:BAG_UPDATE(containerID)
     if containerID == splitBagID and splitSessionStarted then
-        ItemSplitter__wait(1, ItemSplitter__splitOnce)
+      if singleSplitStarted then 
+        singleSplitStarted = false
+        print "false"
+      else
+        if singleSplitStarted2 then
+          singleSplitStarted2 = false
+        else
+          ItemSplitter__wait(1, ItemSplitter__splitOnce)
+        end
+      end
     end
 end
 frame:SetScript("OnEvent", function(self, event, ...)
@@ -46,13 +59,13 @@ function ItemSplitter__wait(delay, func, ...)
 end
 
 local function MyAddonCommands(msg)
-    local _, _, cmd, args = string.find(msg, "%s?(%w+)%s?(.*)")
-    if cmd == "split" then
-        ItemSplitter__split() 
-    end
+    local _, _, numberOfStacks, itemsPerStack = string.find(msg, "%s*(%d+)%s+(%d+)")
+    g_numberOfStacks = tonumber(numberOfStacks)
+    g_itemsPerStack = tonumber(itemsPerStack)
+    ItemSplitter__split() 
 end
   
-SLASH_ITEMSPLITTER1 = '/spltr'
+SLASH_ITEMSPLITTER1 = '/sp'
   
 SlashCmdList["ITEMSPLITTER"] = MyAddonCommands
 
@@ -61,8 +74,13 @@ function ItemSplitter__split()
     ItemSplitter__splitOnce()
 end
 
-function ItemSplitter__splitOnce()
+function ItemSplitter__splitOnce() 
+    if g_numberOfStacks <= 0 then
+      splitSessionStarted = false
+      return
+    end
     numberOfSlots = GetContainerNumSlots(splitBagID)
+    print(g_numberOfStacks)
     splitItemSlot = 1
     freeSlot = 0
     for slot = 1,numberOfSlots do
@@ -71,12 +89,19 @@ function ItemSplitter__splitOnce()
             freeSlot = slot 
         end
     end
-    if freeSlot> 0 then
+    if freeSlot > 0 then
         texture, itemCount, locked, quality, readable = GetContainerItemInfo(splitBagID, splitItemSlot)
-        if (itemCount > 1) then
-            SplitContainerItem(splitBagID, splitItemSlot, 1)
+        
+        if itemCount > 1 and itemCount >= g_itemsPerStack then
+          singleSplitStarted = true 
+          singleSplitStarted2 = true  
+          SplitContainerItem(splitBagID, splitItemSlot, g_itemsPerStack)
             PickupContainerItem(splitBagID, freeSlot)
+            g_numberOfStacks = g_numberOfStacks - 1
             return   
+        else
+          splitSessionStarted = false
+          return
         end
     end
     print("here")

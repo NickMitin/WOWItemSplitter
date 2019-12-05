@@ -3,6 +3,6 @@
 ## Title-enUS: ItemSplitter
 ## Title-ruRU: Великий разделитель
 ## Author: Nick Mitin
-## Version: 0.1
+## Version: 0.2
 
 ItemSplitter.lua
